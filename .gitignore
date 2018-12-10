@@ -1,0 +1,8 @@
+*.pkl
+*.pyc
+*.un~
+__pycache__/
+build/
+dist/
+*.spec
+*.exe
