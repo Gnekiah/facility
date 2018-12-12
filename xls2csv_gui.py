@@ -53,10 +53,10 @@ class Xls2CsvWindow(wx.Dialog):
         panel = wx.Panel(self)
         panel.SetFont(wx.Font(14, wx.DEFAULT, wx.NORMAL, wx.NORMAL))
 
-        p_origin = wx.Button(parent=panel, label="选择文件(夹)", pos=(10,10))
-        p_origin_path = wx.StaticText(parent=panel, label="", pos=(160,10))
-        p_target = wx.Button(parent=panel, label="选择保存路径", pos=(10,45))
-        p_target_path = wx.StaticText(parent=panel, label="", pos=(160,50))
+        p_origin = wx.Button(parent=panel, label="选择文件", pos=(10,10))
+        p_origin_path = wx.StaticText(parent=panel, label="", pos=(125,15))
+        p_target = wx.Button(parent=panel, label="保存路径", pos=(10,45))
+        p_target_path = wx.StaticText(parent=panel, label="", pos=(125,50))
         p_format = wx.RadioBox(parent=panel, label="目标编码:", pos=(10,80), choices=['gbk','utf-8'], majorDimension=2)
         p_run = wx.Button(parent=panel, label="开始转换", pos=(290,100))
         p_log = wx.TextCtrl(parent=panel, pos=(10,160), size=(465, 190), style=wx.TE_READONLY | wx.TE_MULTILINE)
@@ -78,10 +78,11 @@ class Xls2CsvWindow(wx.Dialog):
 
         
     def OnOriginButton(self, event):
-        filesFilter = "Excel (*.xlsx)|*.xlsx|Excel (*.xls)|*.xls"
+        filesFilter = "所有文件|*.*|Excel (*.xlsx)|*.xlsx|Excel (*.xls)|*.xls"
         dlg = wx.FileDialog(parent=self.panel, message="选择原始文件", wildcard=filesFilter, style=wx.FD_OPEN|wx.FD_MULTIPLE)
         dialogResult = dlg.ShowModal()
         if dialogResult !=  wx.ID_OK:
+            dlg.Destroy()
             return
         paths = dlg.GetPaths()
         self.p_origin_path.SetLabel('')
@@ -91,16 +92,19 @@ class Xls2CsvWindow(wx.Dialog):
             pathstr += path + "|"
             self.paths.append(path)
         self.p_origin_path.SetLabel(pathstr)
+        dlg.Destroy()
 
 
     def OnTargetButton(self, event):
         dlg = wx.DirDialog (parent=self.panel, message="选择保存路径", style=wx.DD_DEFAULT_STYLE | wx.DD_DIR_MUST_EXIST)
         dialogResult = dlg.ShowModal()
         if dialogResult !=  wx.ID_OK:
+            dlg.Destroy()
             return
         path = dlg.GetPath()
         self.p_target_path.SetLabel(path)
         self.tgtpath = path
+        dlg.Destroy()
 
 
     def OnRunButton(self, event):
