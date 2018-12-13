@@ -14,7 +14,7 @@
 
 import wx, os, _thread, json, sys, urllib
 from urllib import request
-from subprocess import Popen
+import subprocess
 import pswgen_gui
 import idnum_gui
 import xls2csv_gui
@@ -24,7 +24,7 @@ import watermark_gui
 
 
 G_APP_NAME = "facility"
-G_VERSION = "0.0.1"
+G_VERSION = "0.0.4"
 G_UPDATE_URL = "http://www.xxiong.me/facility/"
 G_HOME_PATH = os.path.join(os.path.expanduser('~'), ".facility")
 G_CONFIG_PATH = os.path.join(G_HOME_PATH, "facility.json")
@@ -61,11 +61,6 @@ class MainWindow(wx.App):
             config["facility"]["path"] = apppath
         else:
             config = {
-                "update": {
-                    "version": "0.0.0",
-                    "name": "-",
-                    "path": "-"
-                }, 
                 "facility": {
                     "version": G_VERSION,
                     "name": appname,
@@ -77,30 +72,18 @@ class MainWindow(wx.App):
                     "path": apppath
                 }
             }
-        remote_update = data["update"]["Windows"]
-        remote_latest = data["latest"]
-        ## 更新 update 程序
-        if remote_update["version"] > config["update"]["version"]:
-            _url = os.path.join(G_UPDATE_URL, remote_update["name"])
-            _localpath = os.path.join(G_HOME_PATH, remote_update["name"])
-            urllib.request.urlretrieve(_url, _localpath)
-            
-            config["update"]["version"] = remote_update["version"]
-            config["update"]["name"] = remote_update["name"]
-            config["update"]["path"] = _localpath
-            with open(config_path, 'w') as f:
-                json.dump(config, f)
         ## 检查预更新版本是否为最新
+        remote_latest = data["latest"]
         if remote_latest["version"] > config["latest_facility"]["version"]:
             _url = os.path.join(G_UPDATE_URL, remote_latest["name"])
             _localpath = os.path.join(G_HOME_PATH, remote_latest["name"])
-            urllib.request.urlretrieve(_url, _localpath)
-            
+            urllib.request.urlretrieve(_url, _localpath)    
             config["latest_facility"]["version"] = remote_latest["version"]
             config["latest_facility"]["name"] = remote_latest["name"]
             config["latest_facility"]["path"] = _localpath
-            with open(config_path, 'w') as f:
-                json.dump(config, f)
+        with open(config_path, 'w') as f:
+            json.dump(config, f)
+
         ## 检查是否更新到最新版本
         if config["latest_facility"]["version"] > config["facility"]["version"]:
             self.updateButton.SetLabel("有新版本，点击更新")
@@ -235,7 +218,20 @@ class MainWindow(wx.App):
 
         
     def OnUpdateButton(self, event):
-        Popen(self.config["update"]["path"])
+        try:
+            config = self.config
+            cmdpath = os.path.join(G_HOME_PATH, "update.bat")
+            with open(cmdpath, "w") as f:
+                f.write("ping 127.0.0.1 -n 2 >nul\n")
+                f.write("copy /Y %s %s >nul\n" % (config["latest_facility"]["path"], config["facility"]["path"]))
+                f.write("start %s >nul\n" % config["facility"]["path"])
+                f.write("exit\n")
+            
+            subprocess.Popen("start " + cmdpath, shell=True)
+        except Exception as e:
+            print(e)
+            with open(G_LOG_PATH, "at") as f:
+                f.write(str(e))
         wx.Exit()
 
 
